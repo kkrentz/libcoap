@@ -130,6 +130,10 @@ option(
   "compile with support for OSCORE"
   ON)
 option(
+  ENABLE_OSCORE_NG
+  "compile with support for OSCORE-NG"
+  OFF)
+option(
   WITH_OBSERVE_PERSIST
   "compile with observe persist support for server restarts"
   ON)
@@ -322,8 +326,23 @@ endif()
 if(${ENABLE_OSCORE})
   set(COAP_OSCORE_SUPPORT "1")
   message(STATUS "compiling with OSCORE support")
+  if(${ENABLE_OSCORE_NG})
+    set(ENABLE_OSCORE_NG OFF)
+    message(STATUS "OSCORE-NG disabled due to naming conflicts")
+  endif()
 else()
+  if(${ENABLE_WS})
+    set(ENABLE_WS OFF)
+    message(STATUS "Disabling WebSockets as it depends on OSCORE modules")
+  endif()
   message(STATUS "compiling without OSCORE support")
+endif()
+
+if(${ENABLE_OSCORE_NG})
+  set(COAP_OSCORE_NG_SUPPORT "1")
+  message(STATUS "compiling with OSCORE-NG support")
+else()
+  message(STATUS "compiling without OSCORE-NG support")
 endif()
 
 if(${ENABLE_WS} AND ${ENABLE_TCP})
@@ -634,6 +653,7 @@ message(STATUS "ENABLE_Q_BLOCK:..................${ENABLE_Q_BLOCK}")
 message(STATUS "ENABLE_CLIENT_MODE:..............${ENABLE_CLIENT_MODE}")
 message(STATUS "ENABLE_SERVER_MODE:..............${ENABLE_SERVER_MODE}")
 message(STATUS "ENABLE_OSCORE:...................${ENABLE_OSCORE}")
+message(STATUS "ENABLE_OSCORE_NG:................${ENABLE_OSCORE_NG}")
 message(STATUS "ENABLE_ASYNC:....................${ENABLE_ASYNC}")
 message(STATUS "ENABLE_THREAD_SAFE:..............${ENABLE_THREAD_SAFE}")
 message(STATUS "ENABLE_THREAD_RECURSIVE_CHECK....${ENABLE_THREAD_RECURSIVE_LOCK_CHECK}")
@@ -703,6 +723,7 @@ target_sources(
           ${CMAKE_CURRENT_LIST_DIR}/src/coap_notls.c
           ${CMAKE_CURRENT_LIST_DIR}/src/coap_option.c
           ${CMAKE_CURRENT_LIST_DIR}/src/coap_oscore.c
+          ${CMAKE_CURRENT_LIST_DIR}/src/coap_oscore_ng.c
           ${CMAKE_CURRENT_LIST_DIR}/src/coap_pdu.c
           ${CMAKE_CURRENT_LIST_DIR}/src/coap_prng.c
           ${CMAKE_CURRENT_LIST_DIR}/src/coap_resource.c
@@ -726,6 +747,14 @@ target_sources(
           $<$<BOOL:${COAP_OSCORE_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore/oscore_context.c>
           $<$<BOOL:${COAP_OSCORE_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore/oscore_cose.c>
           $<$<BOOL:${COAP_OSCORE_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore/oscore_crypto.c>
+          # needed for OSCORE-NG if enabled
+          $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_aes_128.c>
+          $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_cbor.c>
+          $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_ccm_star.c>
+          $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_cose.c>
+          $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_list.c>
+          $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_sha_256.c>
+          $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng.c>
           # headers
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap.h
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/libcoap.h
@@ -741,6 +770,7 @@ target_sources(
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_mem.h
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_net.h
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_option.h
+          ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_oscore_ng.h
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_pdu.h
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_prng.h
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_resource.h
@@ -803,6 +833,8 @@ if(ENABLE_TESTS)
     ${CMAKE_CURRENT_LIST_DIR}/tests/test_options.h
     ${CMAKE_CURRENT_LIST_DIR}/tests/test_oscore.c
     ${CMAKE_CURRENT_LIST_DIR}/tests/test_oscore.h
+    ${CMAKE_CURRENT_LIST_DIR}/tests/test_oscore_ng.c
+    ${CMAKE_CURRENT_LIST_DIR}/tests/test_oscore_ng.h
     ${CMAKE_CURRENT_LIST_DIR}/tests/test_pdu.c
     ${CMAKE_CURRENT_LIST_DIR}/tests/test_pdu.h
     ${CMAKE_CURRENT_LIST_DIR}/tests/test_sendqueue.c
