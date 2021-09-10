@@ -101,6 +101,9 @@
 /* Define to 1 if the system has libmbedtls */
 #cmakedefine COAP_WITH_LIBMBEDTLS @COAP_WITH_LIBMBEDTLS@
 
+/* Define if the system has OSCORE-NG */
+#cmakedefine COAP_OSCORE_NG_SUPPORT @COAP_OSCORE_NG_SUPPORT@
+
 /* Define to 1 if you have the <limits.h> header file. */
 #cmakedefine HAVE_LIMITS_H @HAVE_LIMITS_H@
 
