@@ -3670,26 +3670,6 @@ handle_response(coap_context_t *context, coap_session_t *session,
   if (rcvd->type != COAP_MESSAGE_ACK)
     coap_cancel_all_messages(context, session, &rcvd->actual_token);
 
-  /* Check for message duplication */
-  if (COAP_PROTO_NOT_RELIABLE(session->proto)) {
-    if (rcvd->type == COAP_MESSAGE_CON) {
-      if (rcvd->mid == session->last_con_mid) {
-        /* Duplicate response: send ACK/RST, but don't process */
-        if (session->last_con_handler_res == COAP_RESPONSE_OK)
-          coap_send_ack_lkd(session, rcvd);
-        else
-          coap_send_rst_lkd(session, rcvd);
-        return;
-      }
-      session->last_con_mid = rcvd->mid;
-    } else if (rcvd->type == COAP_MESSAGE_ACK) {
-      if (rcvd->mid == session->last_ack_mid) {
-        /* Duplicate response */
-        return;
-      }
-      session->last_ack_mid = rcvd->mid;
-    }
-  }
   /* Check to see if checking out extended token support */
   if (session->max_token_checked == COAP_EXT_T_CHECKING &&
       session->remote_test_mid == rcvd->mid) {
