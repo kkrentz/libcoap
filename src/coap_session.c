@@ -468,8 +468,6 @@ coap_make_session(coap_proto_t proto, coap_session_type_t type,
 #endif /* COAP_Q_BLOCK_SUPPORT */
   session->dtls_event = -1;
   session->last_ping_mid = COAP_INVALID_MID;
-  session->last_ack_mid = COAP_INVALID_MID;
-  session->last_con_mid = COAP_INVALID_MID;
   session->last_con_handler_res = COAP_RESPONSE_OK;
   session->max_token_size = context->max_token_size; /* RFC8974 */
   if (session->type != COAP_SESSION_TYPE_CLIENT)

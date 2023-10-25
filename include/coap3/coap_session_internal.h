@@ -220,10 +220,6 @@ struct coap_session_t {
   uint64_t tx_token;              /**< Next token number to use */
   coap_bin_const_t *last_token;   /** last token used to make a request */
   coap_bin_const_t *echo;         /**< Echo value to send with next request */
-  coap_mid_t last_ack_mid;        /**< The last ACK mid that has been
-                                       been processed */
-  coap_mid_t last_con_mid;        /**< The last CON mid that has been
-                                       been processed */
   coap_response_t last_con_handler_res; /**< The result of calling the response handler
                                        of the last CON */
 #if COAP_SERVER_SUPPORT
