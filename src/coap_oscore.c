@@ -627,25 +627,6 @@ coap_oscore_new_pdu_encrypted(coap_session_t *session,
     oscore_delete_association(session, association);
   association = NULL;
 
-  /*
-   * If this is a response ACK with data, make it a separate response
-   * by sending an Empty ACK and changing osc_pdu's MID and type.  This
-   * then allows lost response ACK with data to be recovered.
-   */
-  if (coap_request == 0 && osc_pdu->type == COAP_MESSAGE_ACK &&
-      COAP_PROTO_NOT_RELIABLE(session->proto)) {
-    coap_pdu_t *empty = coap_pdu_init(COAP_MESSAGE_ACK,
-                                      0,
-                                      osc_pdu->mid,
-                                      0);
-    if (empty) {
-      if (coap_send_internal(session, empty) != COAP_INVALID_MID) {
-        osc_pdu->mid = coap_new_message_id(session);
-        osc_pdu->type = COAP_MESSAGE_CON;
-      }
-    }
-  }
-
   if (!coap_pdu_encode_header(osc_pdu, session->proto)) {
     goto error;
   }

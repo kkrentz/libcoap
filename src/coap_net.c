@@ -3715,6 +3715,11 @@ coap_dispatch(coap_context_t *context, coap_session_t *session,
   coap_option_filter_clear(&opt_filter);
 
 #if COAP_OSCORE_NG_SUPPORT
+  coap_opt_iterator_t oi;
+  const coap_opt_t *oscore_ng_option = coap_check_option(pdu, COAP_OPTION_OSCORE, &oi);
+  if (oscore_ng_option) {
+    printf("%lu,%u,%u,%u\n", clock_time(), pdu->mid, COAP_PDU_IS_REQUEST(pdu) || COAP_PDU_IS_PING(pdu), coap_opt_length(oscore_ng_option));
+  }
   int is_b2_request_1;
   dec_pdu = coap_oscore_ng_message_decrypt(session, pdu, &is_b2_request_1);
   if (!dec_pdu) {
@@ -3741,6 +3746,11 @@ coap_dispatch(coap_context_t *context, coap_session_t *session,
 #endif /* COAP_OSCORE_NG_SUPPORT */
 
 #if COAP_OSCORE_SUPPORT
+  coap_opt_iterator_t oi;
+  const coap_opt_t *oscore_option = coap_check_option(pdu, COAP_OPTION_OSCORE, &oi);
+  if (oscore_option) {
+    printf("%lu,%u,%u,%u\n", clock_time(), pdu->mid, COAP_PDU_IS_REQUEST(pdu) || COAP_PDU_IS_PING(pdu), coap_opt_length(oscore_option));
+  }
   if (!COAP_PDU_IS_SIGNALING(pdu) &&
       coap_option_check_critical(session, pdu, &opt_filter) == 0) {
     if (pdu->type == COAP_MESSAGE_NON) {
