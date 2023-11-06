@@ -1743,6 +1743,10 @@ coap_retransmit(coap_context_t *context, coap_queue_t *node) {
     }
   }
 
+  if (node->pdu->mid == node->session->last_ping_mid) {
+    node->session->last_ping_mid = COAP_INVALID_MID;
+  }
+
   /* And finally delete the node */
   if (node->pdu->type == COAP_MESSAGE_CON && context->nack_handler) {
     coap_check_update_token(node->session, node->pdu);
@@ -3744,10 +3748,7 @@ coap_dispatch(coap_context_t *context, coap_session_t *session,
     /* We have sent something the receiver disliked, so we remove
      * not only the message id but also the subscriptions we might
      * have. */
-    is_ping_rst = 0;
-    if (pdu->mid == session->last_ping_mid &&
-        context->ping_timeout && session->last_ping > 0)
-      is_ping_rst = 1;
+    is_ping_rst = pdu->mid == session->last_ping_mid;
 
 #if COAP_Q_BLOCK_SUPPORT
     /* Check to see if checking out Q-Block support */
@@ -3793,12 +3794,13 @@ coap_dispatch(coap_context_t *context, coap_session_t *session,
                                                    COAP_NACK_RST, sent->id));
         }
       } else if (is_ping_rst) {
+        /* resetting first as the pong_handler might send a ping */
+        session->last_pong = session->last_rx_tx;
+        session->last_ping_mid = COAP_INVALID_MID;
         if (context->pong_handler) {
           coap_lock_callback(context,
                              context->pong_handler(session, pdu, pdu->mid));
         }
-        session->last_pong = session->last_rx_tx;
-        session->last_ping_mid = COAP_INVALID_MID;
       }
     } else {
 #if COAP_SERVER_SUPPORT

@@ -745,6 +745,10 @@ coap_session_send_ping(coap_session_t *session) {
   coap_pdu_t *ping = NULL;
 
   coap_lock_check_locked(session->context);
+  if (session->last_ping_mid != COAP_INVALID_MID) {
+    coap_log_warn("sending a ping already\n");
+    return session->last_ping_mid;
+  }
   if (session->state != COAP_SESSION_STATE_ESTABLISHED ||
       session->con_active)
     return COAP_INVALID_MID;
@@ -759,7 +763,8 @@ coap_session_send_ping(coap_session_t *session) {
 #endif /* !COAP_DISABLE_TCP */
   if (!ping)
     return COAP_INVALID_MID;
-  return coap_send_internal(session, ping);
+  session->last_ping_mid = coap_send_internal(session, ping);
+  return session->last_ping_mid;
 }
 
 void

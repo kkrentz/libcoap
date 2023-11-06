@@ -1438,7 +1438,7 @@ release_1:
         ctx->ping_timeout > 0) {
       if (s->last_rx_tx + ctx->ping_timeout * COAP_TICKS_PER_SECOND <= now) {
         /* Time to send a ping */
-        if ((s->last_ping_mid = coap_session_send_ping(s)) == COAP_INVALID_MID)
+        if (coap_session_send_ping(s) == COAP_INVALID_MID)
           /* Some issue - not safe to continue processing */
           continue;
         if (s->last_ping > 0 && s->last_pong < s->last_ping) {
