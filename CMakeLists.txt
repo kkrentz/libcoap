@@ -79,7 +79,7 @@ endif()
 # The libcoap library
 #
 
-add_library(${COAP_LIBRARY_NAME})
+add_library(${COAP_LIBRARY_NAME} STATIC)
 if(NOT ZEPHYR_BASE)
 #  set_property(TARGET ${COAP_LIBRARY_NAME} PROPERTY C_STANDARD 99)
 endif() # ! ZEPHYR_BASE
