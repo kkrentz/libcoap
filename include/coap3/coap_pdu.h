@@ -126,6 +126,7 @@ typedef enum coap_request_t {
 #define COAP_OPTION_OSCORE          9 /* C_____U, *,       0-255 B, RFC8613 */
 #define COAP_OPTION_URI_PATH       11 /* CU-RE__, String,  0-255 B, RFC7252 */
 #define COAP_OPTION_CONTENT_FORMAT 12 /* ____E__, uint,      0-2 B, RFC7252 */
+#define COAP_OPTION_OSCORE_NG      13 /* C_____U, *,       0-255 B */
 #define COAP_OPTION_CONTENT_TYPE COAP_OPTION_CONTENT_FORMAT
 /* COAP_OPTION_MAXAGE default 60 seconds if not set */
 #define COAP_OPTION_MAXAGE         14 /* _U-_E_U, uint,      0-4 B, RFC7252 */

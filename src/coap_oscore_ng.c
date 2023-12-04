@@ -304,11 +304,11 @@ coap_oscore_ng_message_encrypt(coap_session_t *session, coap_pdu_t *pdu) {
     max_opt = 0;
     while (1) {
       current_option = coap_option_next(&oi);
-      if ((!current_option || (oi.number > COAP_OPTION_OSCORE))
+      if ((!current_option || (oi.number > COAP_OPTION_OSCORE_NG))
           && !added_oscore_ng_option) {
-        outer_pdu_size += coap_opt_encode_size(COAP_OPTION_OSCORE - max_opt,
+        outer_pdu_size += coap_opt_encode_size(COAP_OPTION_OSCORE_NG - max_opt,
                                                oscore_ng_option_value.len);
-        max_opt = COAP_OPTION_OSCORE;
+        max_opt = COAP_OPTION_OSCORE_NG;
         added_oscore_ng_option = 1;
       }
       if (!current_option) {
@@ -332,10 +332,10 @@ coap_oscore_ng_message_encrypt(coap_session_t *session, coap_pdu_t *pdu) {
     added_oscore_ng_option = 0;
     while (1) {
       current_option = coap_option_next(&oi);
-      if ((!current_option || (oi.number > COAP_OPTION_OSCORE))
+      if ((!current_option || (oi.number > COAP_OPTION_OSCORE_NG))
           && !added_oscore_ng_option) {
         if (!coap_add_option(outer_pdu,
-                             COAP_OPTION_OSCORE,
+                             COAP_OPTION_OSCORE_NG,
                              oscore_ng_option_value.len,
                              oscore_ng_option_value.u8)) {
           coap_log_err("create_outer_pdu: Adding OSCORE-NG option failed\n");
@@ -411,7 +411,7 @@ coap_oscore_ng_message_decrypt(coap_session_t *session,
                     "Message with a Proxy-* Option\n");
       return pdu;
     }
-    oscore_ng_option = coap_check_option(pdu, COAP_OPTION_OSCORE, &oi);
+    oscore_ng_option = coap_check_option(pdu, COAP_OPTION_OSCORE_NG, &oi);
     if (!oscore_ng_option) {
       if (is_oscore_ng_session) {
         if (is_request) {

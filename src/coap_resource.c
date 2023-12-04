@@ -739,7 +739,8 @@ coap_add_observer(coap_resource_t *resource,
   const uint8_t *data;
   /* https://rfc-editor.org/rfc/rfc7641#section-3.6 */
   static const uint16_t cache_ignore_options[] = { COAP_OPTION_ETAG,
-                                                   COAP_OPTION_OSCORE
+                                                   COAP_OPTION_OSCORE,
+                                                   COAP_OPTION_OSCORE_NG,
                                                  };
 
   assert(session);

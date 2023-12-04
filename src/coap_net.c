@@ -711,6 +711,7 @@ coap_option_check_critical(coap_session_t *session,
       case COAP_OPTION_IF_NONE_MATCH:
       case COAP_OPTION_URI_PORT:
       case COAP_OPTION_URI_PATH:
+      case COAP_OPTION_OSCORE_NG:
       case COAP_OPTION_URI_QUERY:
       case COAP_OPTION_ACCEPT:
       case COAP_OPTION_PROXY_URI:
@@ -719,9 +720,6 @@ coap_option_check_critical(coap_session_t *session,
       case COAP_OPTION_BLOCK1:
         break;
       case COAP_OPTION_OSCORE:
-#if COAP_OSCORE_NG_SUPPORT
-        break;
-#endif /* COAP_OSCORE_NG_SUPPORT */
         /* Valid critical if doing OSCORE */
 #if COAP_OSCORE_SUPPORT
         if (ctx->p_osc_ctx)
@@ -2486,6 +2484,7 @@ coap_new_error_response(const coap_pdu_t *request, coap_pdu_code_t code,
   coap_option_filter_unset(opts, COAP_OPTION_HOP_LIMIT);
   /* Unsafe to send this back */
   coap_option_filter_unset(opts, COAP_OPTION_OSCORE);
+  coap_option_filter_unset(opts, COAP_OPTION_OSCORE_NG);
 
   coap_option_iterator_init(request, &opt_iter, opts);
 

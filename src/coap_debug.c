@@ -542,6 +542,7 @@ msg_option_string(uint8_t code, uint16_t option_type) {
     { COAP_OPTION_OSCORE, "Oscore" },
     { COAP_OPTION_URI_PATH, "Uri-Path" },
     { COAP_OPTION_CONTENT_FORMAT, "Content-Format" },
+    { COAP_OPTION_OSCORE_NG, "OSCORE-NG" },
     { COAP_OPTION_MAXAGE, "Max-Age" },
     { COAP_OPTION_URI_QUERY, "Uri-Query" },
     { COAP_OPTION_HOP_LIMIT, "Hop-Limit" },
@@ -714,7 +715,6 @@ is_binary(int content_format) {
 #error "COAP_DEBUG_BUF_SIZE must be at least 5, should be >= 32 to be useful"
 #endif /* COAP_DEBUG_BUF_SIZE < 5 */
 
-#if !COAP_OSCORE_SUPPORT
 static uint64_t
 read_timestamp(const uint8_t *src, uint_fast8_t len) {
   uint64_t timestamp = 0;
@@ -725,7 +725,6 @@ read_timestamp(const uint8_t *src, uint_fast8_t len) {
   }
   return timestamp;
 }
-#endif /* !COAP_OSCORE_SUPPORT */
 
 void
 coap_show_pdu(coap_log_t level, const coap_pdu_t *pdu) {
@@ -876,68 +875,8 @@ coap_show_pdu(coap_log_t level, const coap_pdu_t *pdu) {
 
         break;
 
-      case COAP_OPTION_OSCORE:
+      case COAP_OPTION_OSCORE_NG:
         opt_len = coap_opt_length(option);
-#if COAP_OSCORE_SUPPORT
-        buf[0] = '\000';
-        if (opt_len) {
-          size_t ofs = 1;
-          size_t cnt;
-
-          opt_val = coap_opt_value(option);
-          if (opt_val[0] & 0x20) {
-            /* Group Flag */
-            snprintf((char *)buf, sizeof(buf), "grp");
-          }
-          if (opt_val[0] & 0x07) {
-            /* Partial IV */
-            cnt = opt_val[0] & 0x07;
-            if (cnt > opt_len - ofs)
-              goto no_more;
-            buf_len = strlen((char *)buf);
-            snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len, "%spIV=0x",
-                     buf_len ? "," : "");
-            for (i = 0; (uint32_t)i < cnt; i++) {
-              buf_len = strlen((char *)buf);
-              snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len,
-                       "%02x", opt_val[ofs + i]);
-            }
-            ofs += cnt;
-          }
-          if (opt_val[0] & 0x10) {
-            /* kid context */
-            if (ofs >= opt_len)
-              goto no_more;
-            cnt = opt_val[ofs];
-            if (cnt > opt_len - ofs - 1)
-              goto no_more;
-            ofs++;
-            buf_len = strlen((char *)buf);
-            snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len, "%skc=0x",
-                     buf_len ? "," : "");
-            for (i = 0; (uint32_t)i < cnt; i++) {
-              buf_len = strlen((char *)buf);
-              snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len,
-                       "%02x", opt_val[ofs + i]);
-            }
-            ofs += cnt;
-          }
-          if (opt_val[0] & 0x08) {
-            /* kid */
-            if (ofs >= opt_len)
-              goto no_more;
-            cnt = opt_len - ofs;
-            buf_len = strlen((char *)buf);
-            snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len, "%skid=0x",
-                     buf_len ? "," : "");
-            for (i = 0; (uint32_t)i < cnt; i++) {
-              buf_len = strlen((char *)buf);
-              snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len,
-                       "%02x", opt_val[ofs + i]);
-            }
-          }
-        }
-#else /* COAP_OSCORE_SUPPORT */
         opt_val = coap_opt_value(option);
         if (!opt_len) {
           buf[0] = '\000';
@@ -1052,7 +991,67 @@ coap_show_pdu(coap_log_t level, const coap_pdu_t *pdu) {
             }
           }
         }
-#endif /* COAP_OSCORE_SUPPORT */
+        goto no_more;
+      case COAP_OPTION_OSCORE:
+        opt_len = coap_opt_length(option);
+        buf[0] = '\000';
+        if (opt_len) {
+          size_t ofs = 1;
+          size_t cnt;
+
+          opt_val = coap_opt_value(option);
+          if (opt_val[0] & 0x20) {
+            /* Group Flag */
+            snprintf((char *)buf, sizeof(buf), "grp");
+          }
+          if (opt_val[0] & 0x07) {
+            /* Partial IV */
+            cnt = opt_val[0] & 0x07;
+            if (cnt > opt_len - ofs)
+              goto no_more;
+            buf_len = strlen((char *)buf);
+            snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len, "%spIV=0x",
+                     buf_len ? "," : "");
+            for (i = 0; (uint32_t)i < cnt; i++) {
+              buf_len = strlen((char *)buf);
+              snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len,
+                       "%02x", opt_val[ofs + i]);
+            }
+            ofs += cnt;
+          }
+          if (opt_val[0] & 0x10) {
+            /* kid context */
+            if (ofs >= opt_len)
+              goto no_more;
+            cnt = opt_val[ofs];
+            if (cnt > opt_len - ofs - 1)
+              goto no_more;
+            ofs++;
+            buf_len = strlen((char *)buf);
+            snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len, "%skc=0x",
+                     buf_len ? "," : "");
+            for (i = 0; (uint32_t)i < cnt; i++) {
+              buf_len = strlen((char *)buf);
+              snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len,
+                       "%02x", opt_val[ofs + i]);
+            }
+            ofs += cnt;
+          }
+          if (opt_val[0] & 0x08) {
+            /* kid */
+            if (ofs >= opt_len)
+              goto no_more;
+            cnt = opt_len - ofs;
+            buf_len = strlen((char *)buf);
+            snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len, "%skid=0x",
+                     buf_len ? "," : "");
+            for (i = 0; (uint32_t)i < cnt; i++) {
+              buf_len = strlen((char *)buf);
+              snprintf((char *)&buf[buf_len], sizeof(buf)-buf_len,
+                       "%02x", opt_val[ofs + i]);
+            }
+          }
+        }
 no_more:
         buf_len = strlen((char *)buf);
         is_oscore_payload = 1;

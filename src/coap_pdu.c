@@ -542,6 +542,7 @@ coap_option_check_repeatable(coap_option_num_t number) {
   case COAP_OPTION_URI_PORT:
   case COAP_OPTION_OSCORE:
   case COAP_OPTION_CONTENT_FORMAT:
+  case COAP_OPTION_OSCORE_NG:
   case COAP_OPTION_MAXAGE:
   case COAP_OPTION_HOP_LIMIT:
   case COAP_OPTION_ACCEPT:
@@ -1165,6 +1166,10 @@ coap_pdu_parse_opt_base(coap_pdu_t *pdu, uint16_t len) {
     break;
   case COAP_OPTION_CONTENT_FORMAT:
     if (len > 2)
+      res = 0;
+    break;
+  case COAP_OPTION_OSCORE_NG:
+    if (len > 255)
       res = 0;
     break;
   case COAP_OPTION_MAXAGE:
