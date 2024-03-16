@@ -88,6 +88,14 @@ typedef struct coap_oscore_conf_t coap_oscore_conf_t;
 typedef struct coap_oscore_rcp_conf_t coap_oscore_rcp_conf_t;
 typedef struct coap_oscore_snd_conf_t coap_oscore_snd_conf_t;
 
+/* ************ coap_oscore_ng_internal.h *************** */
+
+/*
+ * OSCORE-NG information.
+ */
+typedef struct coap_oscore_ng_general_context_t
+  coap_oscore_ng_general_context_t;
+
 /* ************* coap_pdu_internal.h ***************** */
 
 /**

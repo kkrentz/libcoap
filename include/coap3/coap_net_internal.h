@@ -110,6 +110,9 @@ struct coap_context_t {
   coap_oscore_update_seq_num_handler_t
   oscore_update_seq_num_cb; /**< Optional function to call to update sequence number and window values */
 #endif /* COAP_OSCORE_SUPPORT */
+#if COAP_OSCORE_NG_SUPPORT
+  coap_oscore_ng_general_context_t *oscore_ng;
+#endif /* COAP_OSCORE_NG_SUPPORT */
 
 #if COAP_CLIENT_SUPPORT
   coap_response_handler_t response_cb; /**< Called when a response is

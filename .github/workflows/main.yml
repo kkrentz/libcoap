@@ -302,6 +302,11 @@ jobs:
           cd $GITHUB_WORKSPACE/build-${{matrix.TLS}}-${{matrix.OSCORE_ONLY}}-cmake
           valgrind --track-origins=yes --leak-check=yes --show-reachable=yes --error-exitcode=123 --quiet --suppressions=$GITHUB_WORKSPACE/tests/valgrind_suppression ./testdriver
           ./coap-server -? 2>&1 | head -10
+      - name: OSCORE-NG
+        if: matrix.TLS == 'no'
+        run: |
+          cd $GITHUB_WORKSPACE/build-${{matrix.TLS}}-cmake
+          cmake $GITHUB_WORKSPACE -DENABLE_TESTS=ON -DENABLE_DOCS=OFF -DENABLE_OSCORE=OFF -DENABLE_OSCORE_NG=ON
   cmake-macos:
     runs-on: macos-latest
 
