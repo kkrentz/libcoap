@@ -897,6 +897,10 @@ coap_free_context_lkd(coap_context_t *context) {
   coap_delete_all_oscore(context);
 #endif /* COAP_OSCORE_SUPPORT */
 
+#if COAP_OSCORE_NG_SUPPORT
+  coap_free_type(COAP_OSCORE_NG_GENERAL_CONTEXT, context->oscore_ng);
+#endif /* COAP_OSCORE_NG_SUPPORT */
+
   if (context->dtls_context)
     coap_dtls_free_context(context->dtls_context);
 #ifdef COAP_EPOLL_SUPPORT
@@ -1081,6 +1085,9 @@ coap_option_check_critical(coap_session_t *session,
       case COAP_OPTION_PROXY_SCHEME:
         break;
       case COAP_OPTION_OSCORE:
+#if COAP_OSCORE_NG_SUPPORT
+        break;
+#endif /* COAP_OSCORE_NG_SUPPORT */
         /* Valid critical if doing OSCORE */
 #if COAP_OSCORE_SUPPORT
         /* Generally configured or has coap oscore enabled helper function */
@@ -1235,14 +1242,34 @@ coap_send_ack_lkd(coap_session_t *session, const coap_pdu_t *request) {
 
 ssize_t
 coap_session_send_pdu(coap_session_t *session, coap_pdu_t *pdu) {
+#if COAP_OSCORE_NG_SUPPORT
+  coap_pdu_t *encrypted_pdu;
+#endif /* COAP_OSCORE_NG_SUPPORT */
   ssize_t bytes_written = -1;
   assert(pdu->hdr_size > 0);
+
+#if COAP_OSCORE_NG_SUPPORT
+  encrypted_pdu = coap_oscore_ng_message_encrypt(session, pdu);
+  if (!encrypted_pdu) {
+    coap_log_warn("OSCORE-NG PDU could not be encrypted\n");
+    return -1;
+  }
+  if (pdu != encrypted_pdu) {
+    pdu = encrypted_pdu;
+  } else {
+    encrypted_pdu = NULL;
+  }
+#endif /* COAP_OSCORE_NG_SUPPORT */
 
   /* Caller handles partial writes */
   bytes_written = session->sock.lfunc[COAP_LAYER_SESSION].l_write(session,
                   pdu->token - pdu->hdr_size,
                   pdu->used_size + pdu->hdr_size);
   coap_show_pdu(COAP_LOG_DEBUG, pdu);
+
+#if COAP_OSCORE_NG_SUPPORT
+  coap_delete_pdu_lkd(encrypted_pdu);
+#endif /* COAP_OSCORE_NG_SUPPORT */
   return bytes_written;
 }
 
@@ -2532,6 +2559,14 @@ coap_retransmit(coap_context_t *context, coap_queue_t *node) {
 #if COAP_CLIENT_SUPPORT
   }
 #endif /* COAP_CLIENT_SUPPORT */
+
+#if COAP_OSCORE_NG_SUPPORT
+  if (node->session->oscore_ng_context
+      && (node->session->oscore_ng_context->b2_stage == OSCORE_NG_B2_DONE)) {
+    coap_log_info("Restarting B2 protocol\n");
+    oscore_ng_start_b2(node->session->oscore_ng_context);
+  }
+#endif /* COAP_OSCORE_NG_SUPPORT */
 
 #if COAP_SERVER_SUPPORT
   /* Check if subscriptions exist that should be canceled after
@@ -4052,6 +4087,15 @@ handle_request(coap_context_t *context, coap_session_t *session, coap_pdu_t *pdu
     goto fail_response;
   }
 #endif /* COAP_OSCORE_SUPPORT */
+#if COAP_OSCORE_NG_SUPPORT
+  if ((resource->flags & COAP_RESOURCE_FLAGS_OSCORE_NG_ONLY)
+      && !session->oscore_ng_context) {
+    coap_log_debug("request for OSCORE-NG only resource '%*.*s', return 4.04\n",
+                   (int)uri_path->length, (int)uri_path->length, uri_path->s);
+    resp = 401;
+    goto fail_response;
+  }
+#endif /* COAP_OSCORE_NG_SUPPORT */
   if (resource->is_unknown == 0 && resource->is_proxy_uri == 0) {
     /* Check for existing resource and If-Non-Match */
     opt = coap_check_option(pdu, COAP_OPTION_IF_NONE_MATCH, &opt_iter);
@@ -4760,8 +4804,10 @@ coap_dispatch(coap_context_t *context, coap_session_t *session,
   int packet_is_bad = 0;
 #if COAP_OSCORE_SUPPORT
   coap_opt_iterator_t opt_iter;
-  coap_pdu_t *dec_pdu = NULL;
 #endif /* COAP_OSCORE_SUPPORT */
+#if COAP_OSCORE_SUPPORT || COAP_OSCORE_NG_SUPPORT
+  coap_pdu_t *dec_pdu = NULL;
+#endif /* COAP_OSCORE_SUPPORT || COAP_OSCORE_NG_SUPPORT */
   int is_ext_token_rst = 0;
   int oscore_invalid = 0;
   int is_local_mcast = 0;
@@ -4779,6 +4825,42 @@ coap_dispatch(coap_context_t *context, coap_session_t *session,
     }
   }
 
+  coap_option_filter_clear(&opt_filter);
+
+#if COAP_OSCORE_NG_SUPPORT
+  int is_b2_request_1;
+  dec_pdu = coap_oscore_ng_message_decrypt(session, pdu, &is_b2_request_1);
+  if (!dec_pdu) {
+    if (is_b2_request_1) {
+      response = coap_new_error_response(pdu,
+                                         COAP_RESPONSE_CODE_UNAUTHORIZED,
+                                         &opt_filter);
+      if (!response) {
+        coap_log_warn("coap_dispatch: cannot respond to B2 Request #1\n");
+      } else {
+        response->type = COAP_MESSAGE_RST;
+        if (coap_send_internal(session, response, NULL) == COAP_INVALID_MID) {
+          coap_log_warn("coap_dispatch: error sending B2 Response #1\n");
+        }
+      }
+    } else {
+      coap_log_err("coap_dispatch: error during OSCORE-NG decryption\n");
+    }
+    goto finish;
+  } else if (pdu == dec_pdu) {
+    dec_pdu = NULL;
+  } else {
+    /* The cleanup deletes orig_pdu, which only decrements the reference count.
+       The caller eventually deletes orig_pdu. */
+    orig_pdu = pdu;
+    pdu = dec_pdu;
+    /* Referencing dec_pdu makes the cleanup's release of pdu delete dec_pdu. */
+    coap_pdu_reference_lkd(dec_pdu);
+    coap_log_debug("coap_dispatch: decrypted PDU\n");
+    coap_show_pdu(COAP_LOG_DEBUG, pdu);
+  }
+#endif /* COAP_OSCORE_NG_SUPPORT */
+
   /* Check validity of received code */
   if (!coap_check_code_class(session, pdu)) {
     coap_log_info("coap_dispatch: Received invalid PDU code (%d.%02d)\n",
@@ -4792,8 +4874,6 @@ coap_dispatch(coap_context_t *context, coap_session_t *session,
     coap_remove_from_queue(&context->sendqueue, session, pdu->mid, &pdu->actual_token, &sent);
     goto cleanup;
   }
-
-  coap_option_filter_clear(&opt_filter);
 
 #if COAP_SERVER_SUPPORT
   /* See if this a repeat request */
@@ -4812,7 +4892,7 @@ coap_dispatch(coap_context_t *context, coap_session_t *session,
 #if COAP_OSCORE_SUPPORT
       session->oscore_encryption = oscore_encryption;
 #endif /* COAP_OSCORE_SUPPORT */
-      goto finish;
+      goto cleanup;
     }
 #if COAP_OSCORE_SUPPORT
     session->oscore_encryption = oscore_encryption;
@@ -5235,13 +5315,13 @@ cleanup:
   }
   coap_delete_pdu_lkd(orig_pdu);
   coap_delete_node_lkd(sent);
-#if COAP_OSCORE_SUPPORT
+#if COAP_OSCORE_SUPPORT || COAP_OSCORE_NG_SUPPORT
   coap_delete_pdu_lkd(dec_pdu);
-#endif /* COAP_OSCORE_SUPPORT */
+#endif /* COAP_OSCORE_SUPPORT || COAP_OSCORE_NG_SUPPORT */
 
-#if COAP_SERVER_SUPPORT || COAP_OSCORE_SUPPORT
+#if COAP_OSCORE_SUPPORT || COAP_OSCORE_NG_SUPPORT
 finish:
-#endif /* COAP_SERVER_SUPPORT || COAP_OSCORE_SUPPORT */
+#endif /* COAP_OSCORE_SUPPORT || COAP_OSCORE_NG_SUPPORT */
   coap_pdu_release_lkd(pdu);
 }
 

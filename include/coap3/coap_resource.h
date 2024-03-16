@@ -181,6 +181,11 @@ typedef void (*coap_method_handler_t)(coap_resource_t *resource,
 #define COAP_RESOURCE_SAFE_REQUEST_HANDLER 0x4000
 
 /**
+ * Define this resource as an OSCORE-NG enabled access only.
+ */
+#define COAP_RESOURCE_FLAGS_OSCORE_NG_ONLY 0x8000
+
+/**
  * Creates a new resource object and initializes the link field to the string
  * @p uri_path. This function returns the new coap_resource_t object.
  *
