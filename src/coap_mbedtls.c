@@ -3413,7 +3413,7 @@ coap_crypto_hash(cose_alg_t alg,
 
 /* HMAC Functions */
 
-#if COAP_OSCORE_SUPPORT
+#if COAP_OSCORE_SUPPORT && !defined(WITH_CONTIKI)
 static int
 coap_crypto_hmac_compute(coap_crypto_md_type_t md_type,
                          const uint8_t *key, size_t key_len,
@@ -3831,7 +3831,7 @@ coap_crypto_hmac(cose_hmac_alg_t hmac_alg,
   return 1;
 }
 
-#endif /* COAP_OSCORE_SUPPORT */
+#endif /* COAP_OSCORE_SUPPORT && !defined(WITH_CONTIKI) */
 
 #else /* ! COAP_WITH_LIBMBEDTLS && ! COAP_WITH_LIBMBEDTLS_OSCORE*/
 
