@@ -28,7 +28,8 @@ testdriver_SOURCES = \
  test_wellknown.c \
  test_tls.c \
  test_oscore.c \
- test_oscore_ng.c
+ test_oscore_ng.c \
+ test_tiny_dice.c
 
 # The .a file is uses instead of .la so that testdriver can always access the
 # internal functions that are not globaly exposed in a .so file.
