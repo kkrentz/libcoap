@@ -26,7 +26,15 @@
  */
 
 #include "coap3/coap_libcoap_build.h"
+#ifdef KEYSTONE_BOOTLOADER
+#include "string.h"
+#elif defined(KEYSTONE_SM)
+#include <sbi/sbi_string.h>
+#define memcpy sbi_memcpy
+#define memset sbi_memset
+#else
 #include <string.h>
+#endif
 
 #ifndef min
 # define min(a,b) ((a) < (b) ? (a) : (b))
