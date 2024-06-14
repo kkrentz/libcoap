@@ -26,7 +26,15 @@
  */
 
 #include "coap3/coap_libcoap_build.h"
+#ifdef KEYSTONE_BOOTLOADER
+#include "string.h"
+#elif defined(KEYSTONE_SM)
+#include <sbi/sbi_string.h>
+#define memcpy sbi_memcpy
+#define memset sbi_memset
+#else
 #include <string.h>
+#endif
 
 #ifdef __BIG_ENDIAN__
 /* Copy a vector of big-endian uint32_t into a vector of bytes */
