@@ -35,7 +35,16 @@
  */
 
 #include "coap3/coap_libcoap_build.h"
+#ifdef KEYSTONE_BOOTLOADER
+#include "string.h"
+#elif defined(KEYSTONE_SM)
+#include <sbi/sbi_string.h>
+#define memcpy sbi_memcpy
+#define memset sbi_memset
+#define memmove sbi_memmove
+#else
 #include <string.h>
+#endif
 
 void
 cbor_init_writer(cbor_writer_state_t *state,
