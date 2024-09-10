@@ -26,6 +26,9 @@
 
 struct coap_oscore_ng_general_context_t {
   coap_oscore_ng_keying_material_getter_t keying_material_getter;
+#if COAP_RAP_SUPPORT
+  coap_oscore_ng_keying_material_setter_t keying_material_setter;
+#endif /* COAP_RAP_SUPPORT */
   oscore_ng_id_t sender_id;
 };
 

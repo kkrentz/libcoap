@@ -33,11 +33,17 @@ typedef const coap_oscore_ng_keying_material_t *
 (* coap_oscore_ng_keying_material_getter_t)(
     const coap_bin_const_t *recipient_id);
 
+typedef int (* coap_oscore_ng_keying_material_setter_t)(
+    const coap_bin_const_t *recipient_id,
+    const uint8_t *secret,
+    size_t secret_size);
+
 /**
  * Enables OSCORE-NG for a context.
  *
  * @param context                The CoAP context.
  * @param keying_material_getter Returns keying material upon request.
+ * @param keying_material_setter Stores established keying material. Nullable.
  * @param sender_id              The Sender ID.
  *
  * @return                       @c 1 on success, or @c 0 otherwise.
@@ -45,6 +51,7 @@ typedef const coap_oscore_ng_keying_material_t *
 int coap_oscore_ng_init(
     coap_context_t *context,
     const coap_oscore_ng_keying_material_getter_t keying_material_getter,
+    const coap_oscore_ng_keying_material_setter_t keying_material_setter,
     const coap_bin_const_t *sender_id);
 
 /**
