@@ -35,5 +35,5 @@ repos:
     rev: v2.4.1
     hooks:
     -   id: codespell
-        args: ['--ignore-words-list=unsecure']
+        args: ['--ignore-words-list=kno,unsecure']
         exclude: 'tests/oss-fuzz/.*_seed_corpus/.*$|examples/etsi_iot_01_largedata.txt|AUTHORS|examples/riot/Makefile'
