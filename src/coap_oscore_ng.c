@@ -76,6 +76,7 @@ int
 coap_oscore_ng_init(
     coap_context_t *context,
     const coap_oscore_ng_keying_material_getter_t keying_material_getter,
+    const coap_oscore_ng_keying_material_setter_t keying_material_setter,
     const coap_bin_const_t *sender_id) {
   if (context->oscore_ng) {
     coap_log_err("coap_oscore_ng_init: already initialized\n");
@@ -88,6 +89,11 @@ coap_oscore_ng_init(
     return 0;
   }
   context->oscore_ng->keying_material_getter = keying_material_getter;
+#if COAP_RAP_SUPPORT
+  context->oscore_ng->keying_material_setter = keying_material_setter;
+#else /* ! COAP_RAP_SUPPORT */
+  (void)keying_material_setter;
+#endif /* ! COAP_RAP_SUPPORT */
   if (!bin_const_to_oscore_ng_id(&context->oscore_ng->sender_id,
                                  sender_id)) {
     coap_free_type(COAP_OSCORE_NG_GENERAL_CONTEXT, context->oscore_ng);
@@ -606,9 +612,11 @@ int
 coap_oscore_ng_init(
     coap_context_t *context,
     const coap_oscore_ng_keying_material_getter_t keying_material_getter,
+    const coap_oscore_ng_keying_material_setter_t keying_material_setter,
     const coap_bin_const_t *sender_id) {
   (void)context;
   (void)keying_material_getter;
+  (void)keying_material_setter;
   (void)sender_id;
   return 0;
 }

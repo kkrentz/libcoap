@@ -90,6 +90,10 @@ struct coap_session_t {
   uint8_t con_active;               /**< Active CON request sent */
 #if COAP_OSCORE_NG_SUPPORT
   oscore_ng_context_t *oscore_ng_context; /**< OSCORE-NG context */
+#if COAP_CLIENT_SUPPORT
+  coap_rap_context_t *attest_context; /**< attestation context */
+  struct pt attest_pt;              /**< attestation protothread */
+#endif /* COAP_CLIENT_SUPPORT */
 #endif /* COAP_OSCORE_NG_SUPPORT */
   uint8_t csm_block_supported;      /**< CSM TCP blocks supported */
   coap_mid_t last_ping_mid;         /**< the last keepalive message id that was
