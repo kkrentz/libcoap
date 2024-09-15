@@ -299,6 +299,15 @@ if(APPLE)
   add_definitions(-D__APPLE_USE_RFC_3542=1)
 endif()
 
+if(ENABLE_OSCORE_NG)
+  add_definitions(-DuECC_ENABLE_VLI_API=1
+                  -DuECC_SUPPORTS_secp160r1=0
+                  -DuECC_SUPPORTS_secp192r1=0
+                  -DuECC_SUPPORTS_secp224r1=0
+                  -DuECC_SUPPORTS_secp256r1=1
+                  -DuECC_SUPPORTS_secp256k1=0)
+endif()
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -894,10 +903,13 @@ target_sources(
           $<$<BOOL:${COAP_OSCORE_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore/oscore_cose.c>
           $<$<BOOL:${COAP_OSCORE_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore/oscore_crypto.c>
           # needed for OSCORE-NG if enabled
+          $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/ext/micro-ecc/uECC.c>
           $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_aes_128.c>
           $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_cbor.c>
           $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_ccm_star.c>
           $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_cose.c>
+          $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_ecc_curve.c>
+          $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_ecc.c>
           $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_list.c>
           $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng_sha_256.c>
           $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/src/oscore-ng/oscore_ng.c>
@@ -934,7 +946,8 @@ target_include_directories(
          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/>
-         $<INSTALL_INTERFACE:include/>)
+         $<INSTALL_INTERFACE:include/>
+         $<$<BOOL:${COAP_OSCORE_NG_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/ext/micro-ecc>)
 target_link_libraries(
   ${COAP_LIBRARY_NAME}
   PUBLIC $<$<BOOL:${COAP_WITH_LIBOPENSSL}>:OpenSSL::SSL>
