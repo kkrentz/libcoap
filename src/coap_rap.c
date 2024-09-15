@@ -64,6 +64,10 @@ static void on_timeout(coap_session_t *session,
 static int init_oscore_ng_session(coap_session_t *session,
                                   const coap_bin_const_t *recipient_id);
 
+#ifdef ATTESTATION_BENCHMARK
+static rtimer_clock_t moments[4];
+extern uint32_t wait_sum;
+#endif /* ATTESTATION_BENCHMARK */
 const char knock_path[] = "kno";
 const size_t knock_path_length = sizeof(knock_path) - 1;
 const char register_path[] = "reg";
@@ -162,6 +166,11 @@ coap_rap_initiate(coap_session_t *session,
     goto error_1;
   }
 
+#ifdef ATTESTATION_BENCHMARK
+  wait_sum = 0;
+  moments[0] = RTIMER_NOW();
+#endif /* ATTESTATION_BENCHMARK */
+
 #if WITH_IRAP
   PT_SPAWN(&session->rap_pt,
            &session->rap_context->sub_pt,
@@ -213,6 +222,15 @@ coap_rap_initiate(coap_session_t *session,
     goto error_1;
   }
 
+#ifdef ATTESTATION_BENCHMARK
+  moments[1] = RTIMER_NOW();
+  printf("verification,%s,%s,%" RTIMER_PRI ",%" RTIMER_PRI "\n",
+         WITH_TRAP ? (WITH_IRAP ? "tiny" : "fhmqv") : "dh",
+         ATTESTATION_CONF_USE_HARDWARE_ACCELERATION ? "yes" : "no",
+         moments[1] - moments[0],
+         wait_sum);
+#endif /* ATTESTATION_BENCHMARK */
+
   clean_up(session);
   PT_END(&session->rap_pt);
 error_2:
@@ -239,6 +257,11 @@ PT_THREAD(generate_ephemeral_key_pair(coap_rap_context_t *rap_context)) {
 
   PT_BEGIN(&rap_context->sub_pt);
 
+#ifdef ATTESTATION_BENCHMARK
+  wait_sum = 0;
+  moments[0] = RTIMER_NOW();
+#endif /* ATTESTATION_BENCHMARK */
+
 #if WITH_TRAP
   PT_SPAWN(&rap_context->sub_pt,
            ecc_get_protothread(),
@@ -252,6 +275,10 @@ PT_THREAD(generate_ephemeral_key_pair(coap_rap_context_t *rap_context)) {
                                  rap_context->my.ephemeral_private_key,
                                  &rap_context->result));
 #endif /* ! WITH_TRAP */
+
+#ifdef ATTESTATION_BENCHMARK
+  moments[1] = RTIMER_NOW();
+#endif /* ATTESTATION_BENCHMARK */
 
 #if ! WITH_TRAP
   if (rap_context->result) {
@@ -333,6 +360,10 @@ PT_THREAD(initiate_registration(coap_session_t *session)) {
 
   PT_BEGIN(&rap_context->sub_pt);
 
+#ifdef ATTESTATION_BENCHMARK
+  moments[2] = RTIMER_NOW();
+#endif /* ATTESTATION_BENCHMARK */
+
 #if ! WITH_TRAP
   /* sign our compressed ephemeral public key */
   {
@@ -375,6 +406,15 @@ PT_THREAD(initiate_registration(coap_session_t *session)) {
     PT_EXIT(&rap_context->sub_pt);
   }
 #endif /* ! WITH_TRAP */
+
+#ifdef ATTESTATION_BENCHMARK
+  moments[3] = RTIMER_NOW();
+  printf("generation,%s,%s,%" RTIMER_PRI ",%" RTIMER_PRI "\n",
+         WITH_TRAP ? (WITH_IRAP ? "tiny" : "fhmqv") : "dh",
+         ATTESTATION_CONF_USE_HARDWARE_ACCELERATION ? "yes" : "no",
+         (moments[1] - moments[0]) + (moments[3] - moments[2]),
+         wait_sum);
+#endif /* ATTESTATION_BENCHMARK */
 
   {
     size_t payload_size;
