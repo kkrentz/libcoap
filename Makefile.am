@@ -226,6 +226,7 @@ libcoap_@LIBCOAP_NAME_SUFFIX@_la_SOURCES = \
   src/coap_address.c \
   src/coap_asn1.c \
   src/coap_async.c \
+  src/coap_bakery.c \
   src/coap_block.c \
   src/coap_cache.c \
   src/coap_debug.c \
@@ -288,6 +289,7 @@ libcoap_include_HEADERS = \
   $(top_srcdir)/include/coap$(LIBCOAP_API_VERSION)/libcoap.h \
   $(top_srcdir)/include/coap$(LIBCOAP_API_VERSION)/coap_address.h \
   $(top_srcdir)/include/coap$(LIBCOAP_API_VERSION)/coap_async.h \
+  $(top_srcdir)/include/coap$(LIBCOAP_API_VERSION)/coap_bakery.h \
   $(top_srcdir)/include/coap$(LIBCOAP_API_VERSION)/coap_block.h \
   $(top_srcdir)/include/coap$(LIBCOAP_API_VERSION)/coap_cache.h \
   $(top_srcdir)/include/coap$(LIBCOAP_API_VERSION)/coap_debug.h \
