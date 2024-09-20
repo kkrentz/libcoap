@@ -41,6 +41,7 @@
 #include "coap3/coap_forward_decls.h"
 #include "coap3/coap_address.h"
 #include "coap3/coap_async.h"
+#include "coap3/coap_bakery.h"
 #include "coap3/coap_block.h"
 #include "coap3/coap_cache.h"
 #include "coap3/coap_debug.h"
