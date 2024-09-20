@@ -797,6 +797,7 @@ target_sources(
   PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/coap_address.c
           ${CMAKE_CURRENT_LIST_DIR}/src/coap_asn1.c
           ${CMAKE_CURRENT_LIST_DIR}/src/coap_async.c
+          ${CMAKE_CURRENT_LIST_DIR}/src/coap_bakery.c
           ${CMAKE_CURRENT_LIST_DIR}/src/coap_block.c
           ${CMAKE_CURRENT_LIST_DIR}/src/coap_cache.c
           ${CMAKE_CURRENT_LIST_DIR}/src/coap_debug.c
@@ -855,6 +856,7 @@ target_sources(
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/libcoap.h
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_address.h
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_async.h
+          ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_bakery.h
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_block.h
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_cache.h
           ${CMAKE_CURRENT_LIST_DIR}/include/coap${LIBCOAP_API_VERSION}/coap_debug.h
